@@ -1,0 +1,1439 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vim Essential Keys - Interactive Cheat Sheet</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600;800&display=swap");
+
+      :root {
+        --bg-primary: #0d1117;
+        --bg-secondary: #161b22;
+        --bg-tertiary: #21262d;
+        --border-color: #30363d;
+        --text-primary: #c9d1d9;
+        --text-secondary: #8b949e;
+        --accent-normal: #7ee787;
+        --accent-visual: #d2a8ff;
+        --accent-motion: #79c0ff;
+        --accent-edit: #ffa657;
+        --accent-danger: #ff7b72;
+        --accent-info: #56d4dd;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.6;
+        overflow-x: hidden;
+      }
+
+      /* Animated background grid */
+      .bg-grid {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image:
+          linear-gradient(rgba(48, 54, 61, 0.3) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(48, 54, 61, 0.3) 1px, transparent 1px);
+        background-size: 40px 40px;
+        pointer-events: none;
+        z-index: 0;
+        mask-image: radial-gradient(
+          circle at center,
+          black 40%,
+          transparent 100%
+        );
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeInDown 0.8s ease-out;
+      }
+
+      h1 {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 3rem;
+        font-weight: 800;
+        background: linear-gradient(
+          135deg,
+          var(--accent-normal),
+          var(--accent-visual)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+        letter-spacing: -2px;
+      }
+
+      .subtitle {
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+      }
+
+      .mode-indicator {
+        display: inline-flex;
+        gap: 1rem;
+        margin-top: 1rem;
+      }
+
+      .mode-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 700;
+        font-size: 0.9rem;
+        border: 2px solid;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .mode-badge.normal {
+        border-color: var(--accent-normal);
+        color: var(--accent-normal);
+        background: rgba(126, 231, 135, 0.1);
+      }
+
+      .mode-badge.visual {
+        border-color: var(--accent-visual);
+        color: var(--accent-visual);
+        background: rgba(210, 168, 255, 0.1);
+      }
+
+      .mode-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(126, 231, 135, 0.2);
+      }
+
+      .controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+      }
+
+      .search-box {
+        position: relative;
+        flex: 1;
+        min-width: 300px;
+        max-width: 500px;
+      }
+
+      .search-box input {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        padding-left: 3rem;
+        background: var(--bg-secondary);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        color: var(--text-primary);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+      }
+
+      .search-box input:focus {
+        outline: none;
+        border-color: var(--accent-normal);
+        box-shadow: 0 0 0 3px rgba(126, 231, 135, 0.1);
+      }
+
+      .search-box::before {
+        content: "/";
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        font-family: "JetBrains Mono", monospace;
+        font-weight: bold;
+      }
+
+      .filter-tags {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .tag {
+        padding: 0.5rem 1rem;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+        user-select: none;
+      }
+
+      .tag:hover {
+        background: var(--bg-tertiary);
+        transform: translateY(-1px);
+      }
+
+      .tag.active {
+        background: var(--accent-normal);
+        color: var(--bg-primary);
+        border-color: var(--accent-normal);
+        font-weight: 700;
+      }
+
+      .tag[data-category="motion"] {
+        border-color: var(--accent-motion);
+        color: var(--accent-motion);
+      }
+      .tag[data-category="motion"].active {
+        background: var(--accent-motion);
+        color: var(--bg-primary);
+      }
+
+      .tag[data-category="edit"] {
+        border-color: var(--accent-edit);
+        color: var(--accent-edit);
+      }
+      .tag[data-category="edit"].active {
+        background: var(--accent-edit);
+        color: var(--bg-primary);
+      }
+
+      .tag[data-category="visual"] {
+        border-color: var(--accent-visual);
+        color: var(--accent-visual);
+      }
+      .tag[data-category="visual"].active {
+        background: var(--accent-visual);
+        color: var(--bg-primary);
+      }
+
+      .tag[data-category="file"] {
+        border-color: var(--accent-info);
+        color: var(--accent-info);
+      }
+      .tag[data-category="file"].active {
+        background: var(--accent-info);
+        color: var(--bg-primary);
+      }
+
+      .tag[data-category="danger"] {
+        border-color: var(--accent-danger);
+        color: var(--accent-danger);
+      }
+      .tag[data-category="danger"].active {
+        background: var(--accent-danger);
+        color: var(--bg-primary);
+      }
+
+      .sections-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+        animation: fadeInUp 0.8s ease-out 0.4s both;
+      }
+
+      .section {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .section:hover {
+        border-color: var(--accent-normal);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .section-header {
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(
+          135deg,
+          rgba(126, 231, 135, 0.05),
+          transparent
+        );
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .section-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-weight: 800;
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      .section-icon.motion {
+        background: rgba(121, 192, 255, 0.15);
+        color: var(--accent-motion);
+      }
+      .section-icon.edit {
+        background: rgba(255, 166, 87, 0.15);
+        color: var(--accent-edit);
+      }
+      .section-icon.visual {
+        background: rgba(210, 168, 255, 0.15);
+        color: var(--accent-visual);
+      }
+      .section-icon.file {
+        background: rgba(86, 212, 221, 0.15);
+        color: var(--accent-info);
+      }
+      .section-icon.danger {
+        background: rgba(255, 123, 114, 0.15);
+        color: var(--accent-danger);
+      }
+      .section-icon.search {
+        background: rgba(126, 231, 135, 0.15);
+        color: var(--accent-normal);
+      }
+
+      .section-title {
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+
+      .section-subtitle {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-left: auto;
+      }
+
+      .key-list {
+        padding: 0.5rem;
+      }
+
+      .key-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .key-item::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 3px;
+        background: var(--accent-normal);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .key-item:hover {
+        background: var(--bg-tertiary);
+      }
+
+      .key-item:hover::before {
+        opacity: 1;
+      }
+
+      .key-chord {
+        display: flex;
+        gap: 0.25rem;
+        min-width: 100px;
+        flex-shrink: 0;
+      }
+
+      .key {
+        padding: 0.25rem 0.5rem;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 700;
+        font-size: 0.9rem;
+        box-shadow: 0 2px 0 var(--border-color);
+        transition: all 0.1s ease;
+      }
+
+      .key-item:hover .key {
+        border-color: var(--accent-normal);
+        color: var(--accent-normal);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 0 var(--accent-normal);
+      }
+
+      .key-desc {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        flex: 1;
+      }
+
+      .key-tag {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        background: var(--bg-tertiary);
+        color: var(--text-secondary);
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      .practice-zone {
+        margin-top: 3rem;
+        background: var(--bg-secondary);
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2rem;
+        animation: fadeInUp 0.8s ease-out 0.6s both;
+      }
+
+      .practice-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .practice-area {
+        background: var(--bg-primary);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        font-family: "JetBrains Mono", monospace;
+        min-height: 200px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .practice-text {
+        line-height: 2;
+        font-size: 1.1rem;
+      }
+
+      .cursor {
+        display: inline-block;
+        width: 2px;
+        height: 1.2em;
+        background: var(--accent-normal);
+        animation: blink 1s infinite;
+        vertical-align: text-bottom;
+        margin-left: 1px;
+      }
+
+      @keyframes blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        51%,
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .status-bar {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding: 0.75rem 1rem;
+        background: var(--bg-primary);
+        border-radius: 8px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.85rem;
+      }
+
+      .status-mode {
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 700;
+      }
+
+      .status-mode.normal {
+        background: var(--accent-normal);
+        color: var(--bg-primary);
+      }
+
+      .status-mode.visual {
+        background: var(--accent-visual);
+        color: var(--bg-primary);
+      }
+
+      .command-preview {
+        color: var(--text-secondary);
+        margin-left: auto;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+      }
+
+      .stat-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .stat-card:hover {
+        border-color: var(--accent-normal);
+        transform: translateY(-2px);
+      }
+
+      .stat-number {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--accent-normal);
+      }
+
+      .stat-label {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+      }
+
+      @keyframes fadeInDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .highlight {
+        background: rgba(126, 231, 135, 0.2);
+        color: var(--accent-normal);
+        padding: 0 2px;
+        border-radius: 3px;
+      }
+
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2rem;
+        }
+        .sections-grid {
+          grid-template-columns: 1fr;
+        }
+        .controls {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .search-box {
+          max-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-grid"></div>
+
+    <div class="container">
+      <header>
+        <h1>VIM ESSENTIALS</h1>
+        <p class="subtitle">
+          Master the most useful keys in Normal & Visual modes
+        </p>
+        <div class="mode-indicator">
+          <span class="mode-badge normal">NORMAL MODE</span>
+          <span class="mode-badge visual">VISUAL MODE</span>
+        </div>
+      </header>
+
+      <div class="controls">
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search commands... (try 'delete', 'yank', 'word')"
+          />
+        </div>
+        <div class="filter-tags">
+          <span class="tag active" data-filter="all">ALL</span>
+          <span class="tag" data-category="motion">MOTION</span>
+          <span class="tag" data-category="edit">EDIT</span>
+          <span class="tag" data-category="visual">VISUAL</span>
+          <span class="tag" data-category="file">FILE/SAVE</span>
+          <span class="tag" data-category="danger">DANGER</span>
+        </div>
+      </div>
+
+      <div class="sections-grid" id="sectionsGrid">
+        <!-- Motion Section -->
+        <div class="section" data-categories="motion">
+          <div class="section-header">
+            <div class="section-icon motion">M</div>
+            <div class="section-title">Cursor Motion</div>
+            <div class="section-subtitle">Navigate efficiently</div>
+          </div>
+          <div class="key-list">
+            <div
+              class="key-item"
+              data-keywords="left down up right basic move hjkl"
+            >
+              <div class="key-chord">
+                <span class="key">h</span>
+                <span class="key">j</span>
+                <span class="key">k</span>
+                <span class="key">l</span>
+              </div>
+              <div class="key-desc">
+                Left, Down, Up, Right (prefer over arrows)
+              </div>
+            </div>
+            <div class="key-item" data-keywords="word forward next w">
+              <div class="key-chord">
+                <span class="key">w</span>
+              </div>
+              <div class="key-desc">Jump to start of next word</div>
+            </div>
+            <div class="key-item" data-keywords="word backward back previous b">
+              <div class="key-chord">
+                <span class="key">b</span>
+              </div>
+              <div class="key-desc">Jump to start of previous word</div>
+            </div>
+            <div class="key-item" data-keywords="word end e">
+              <div class="key-chord">
+                <span class="key">e</span>
+              </div>
+              <div class="key-desc">Jump to end of current/next word</div>
+            </div>
+            <div class="key-item" data-keywords="line start beginning 0">
+              <div class="key-chord">
+                <span class="key">0</span>
+              </div>
+              <div class="key-desc">Go to start of line (column 0)</div>
+            </div>
+            <div class="key-item" data-keywords="line start first nonblank ^">
+              <div class="key-chord">
+                <span class="key">^</span>
+              </div>
+              <div class="key-desc">Go to first non-blank character</div>
+            </div>
+            <div class="key-item" data-keywords="line end $">
+              <div class="key-chord">
+                <span class="key">$</span>
+              </div>
+              <div class="key-desc">Go to end of line</div>
+            </div>
+            <div class="key-item" data-keywords="gg top file beginning">
+              <div class="key-chord">
+                <span class="key">gg</span>
+              </div>
+              <div class="key-desc">Go to first line of file</div>
+            </div>
+            <div class="key-item" data-keywords="G bottom file end">
+              <div class="key-chord">
+                <span class="key">G</span>
+              </div>
+              <div class="key-desc">Go to last line of file</div>
+            </div>
+            <div class="key-item" data-keywords="line number goto">
+              <div class="key-chord">
+                <span class="key">42</span>
+                <span class="key">G</span>
+              </div>
+              <div class="key-desc">Go to line 42 (any number + G)</div>
+            </div>
+            <div class="key-item" data-keywords="paragraph forward next }">
+              <div class="key-chord">
+                <span class="key">}</span>
+              </div>
+              <div class="key-desc">Jump to next paragraph/blank line</div>
+            </div>
+            <div class="key-item" data-keywords="paragraph backward previous {">
+              <div class="key-chord">
+                <span class="key">{</span>
+              </div>
+              <div class="key-desc">Jump to previous paragraph</div>
+            </div>
+            <div class="key-item" data-keywords="matching bracket brace %">
+              <div class="key-chord">
+                <span class="key">%</span>
+              </div>
+              <div class="key-desc">Jump to matching bracket/brace/paren</div>
+            </div>
+            <div class="key-item" data-keywords="find character line f">
+              <div class="key-chord">
+                <span class="key">f</span>
+                <span class="key">x</span>
+              </div>
+              <div class="key-desc">
+                Find next 'x' on line (use , and ; to navigate)
+              </div>
+            </div>
+            <div
+              class="key-item"
+              data-keywords="find previous character line F"
+            >
+              <div class="key-chord">
+                <span class="key">F</span>
+                <span class="key">x</span>
+              </div>
+              <div class="key-desc">Find previous 'x' on line</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Essential Editing -->
+        <div class="section" data-categories="edit">
+          <div class="section-header">
+            <div class="section-icon edit">E</div>
+            <div class="section-title">Essential Editing</div>
+            <div class="section-subtitle">Modify text</div>
+          </div>
+          <div class="key-list">
+            <div class="key-item" data-keywords="insert before cursor i">
+              <div class="key-chord">
+                <span class="key">i</span>
+              </div>
+              <div class="key-desc">Insert mode (before cursor)</div>
+              <span class="key-tag">mode</span>
+            </div>
+            <div class="key-item" data-keywords="insert after cursor a">
+              <div class="key-chord">
+                <span class="key">a</span>
+              </div>
+              <div class="key-desc">Insert mode (after cursor)</div>
+              <span class="key-tag">mode</span>
+            </div>
+            <div class="key-item" data-keywords="insert line start I">
+              <div class="key-chord">
+                <span class="key">I</span>
+              </div>
+              <div class="key-desc">Insert at start of line</div>
+              <span class="key-tag">mode</span>
+            </div>
+            <div class="key-item" data-keywords="insert line end A">
+              <div class="key-chord">
+                <span class="key">A</span>
+              </div>
+              <div class="key-desc">Insert at end of line</div>
+              <span class="key-tag">mode</span>
+            </div>
+            <div class="key-item" data-keywords="new line below o">
+              <div class="key-chord">
+                <span class="key">o</span>
+              </div>
+              <div class="key-desc">Open new line below, enter insert</div>
+              <span class="key-tag">mode</span>
+            </div>
+            <div class="key-item" data-keywords="new line above O">
+              <div class="key-chord">
+                <span class="key">O</span>
+              </div>
+              <div class="key-desc">Open new line above, enter insert</div>
+              <span class="key-tag">mode</span>
+            </div>
+            <div class="key-item" data-keywords="undo u">
+              <div class="key-chord">
+                <span class="key">u</span>
+              </div>
+              <div class="key-desc">Undo last change</div>
+            </div>
+            <div class="key-item" data-keywords="redo ctrl-r">
+              <div class="key-chord">
+                <span class="key">Ctrl</span>
+                <span class="key">+</span>
+                <span class="key">r</span>
+              </div>
+              <div class="key-desc">Redo undone change</div>
+            </div>
+            <div class="key-item" data-keywords="repeat .">
+              <div class="key-chord">
+                <span class="key">.</span>
+              </div>
+              <div class="key-desc">Repeat last change (powerful!)</div>
+            </div>
+            <div class="key-item" data-keywords="delete character x">
+              <div class="key-chord">
+                <span class="key">x</span>
+              </div>
+              <div class="key-desc">Delete character under cursor</div>
+            </div>
+            <div class="key-item" data-keywords="delete line dd">
+              <div class="key-chord">
+                <span class="key">dd</span>
+              </div>
+              <div class="key-desc">Delete current line</div>
+            </div>
+            <div class="key-item" data-keywords="delete word dw">
+              <div class="key-chord">
+                <span class="key">dw</span>
+              </div>
+              <div class="key-desc">Delete from cursor to end of word</div>
+            </div>
+            <div class="key-item" data-keywords="delete inside di">
+              <div class="key-chord">
+                <span class="key">di</span>
+                <span class="key">"</span>
+              </div>
+              <div class="key-desc">
+                Delete inside quotes (di', di", di(, di[)
+              </div>
+            </div>
+            <div class="key-item" data-keywords="change word cw">
+              <div class="key-chord">
+                <span class="key">cw</span>
+              </div>
+              <div class="key-desc">Change word (delete + insert)</div>
+            </div>
+            <div class="key-item" data-keywords="change line cc">
+              <div class="key-chord">
+                <span class="key">cc</span>
+              </div>
+              <div class="key-desc">Change entire line</div>
+            </div>
+            <div class="key-item" data-keywords="yank copy line yy">
+              <div class="key-chord">
+                <span class="key">yy</span>
+              </div>
+              <div class="key-desc">Yank (copy) current line</div>
+            </div>
+            <div class="key-item" data-keywords="yank copy word yw">
+              <div class="key-chord">
+                <span class="key">yw</span>
+              </div>
+              <div class="key-desc">Yank word</div>
+            </div>
+            <div class="key-item" data-keywords="paste after p">
+              <div class="key-chord">
+                <span class="key">p</span>
+              </div>
+              <div class="key-desc">Paste after cursor</div>
+            </div>
+            <div class="key-item" data-keywords="paste before P">
+              <div class="key-chord">
+                <span class="key">P</span>
+              </div>
+              <div class="key-desc">Paste before cursor</div>
+            </div>
+            <div class="key-item" data-keywords="replace single r">
+              <div class="key-chord">
+                <span class="key">r</span>
+              </div>
+              <div class="key-desc">Replace single character, stay normal</div>
+            </div>
+            <div class="key-item" data-keywords="replace multiple R">
+              <div class="key-chord">
+                <span class="key">R</span>
+              </div>
+              <div class="key-desc">
+                Replace multiple characters (overwrite)
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Mode -->
+        <div class="section" data-categories="visual">
+          <div class="section-header">
+            <div class="section-icon visual">V</div>
+            <div class="section-title">Visual Mode</div>
+            <div class="section-subtitle">Select & manipulate</div>
+          </div>
+          <div class="key-list">
+            <div class="key-item" data-keywords="visual character v">
+              <div class="key-chord">
+                <span class="key">v</span>
+              </div>
+              <div class="key-desc">Start visual mode (character-wise)</div>
+              <span class="key-tag">enter</span>
+            </div>
+            <div class="key-item" data-keywords="visual line V">
+              <div class="key-chord">
+                <span class="key">V</span>
+              </div>
+              <div class="key-desc">Start visual line mode (select lines)</div>
+              <span class="key-tag">enter</span>
+            </div>
+            <div class="key-item" data-keywords="visual block ctrl-v">
+              <div class="key-chord">
+                <span class="key">Ctrl</span>
+                <span class="key">+</span>
+                <span class="key">v</span>
+              </div>
+              <div class="key-desc">Visual block mode (column selection)</div>
+              <span class="key-tag">enter</span>
+            </div>
+            <div class="key-item" data-keywords="select word vw">
+              <div class="key-chord">
+                <span class="key">v</span>
+                <span class="key">w</span>
+              </div>
+              <div class="key-desc">Select to end of word (v + motion)</div>
+            </div>
+            <div class="key-item" data-keywords="select inside vi">
+              <div class="key-chord">
+                <span class="key">vi</span>
+                <span class="key">w</span>
+              </div>
+              <div class="key-desc">
+                Select inside word (viw, vi", vi(, etc.)
+              </div>
+            </div>
+            <div class="key-item" data-keywords="select around va">
+              <div class="key-chord">
+                <span class="key">va</span>
+                <span class="key">w</span>
+              </div>
+              <div class="key-desc">
+                Select around word (includes delimiters)
+              </div>
+            </div>
+            <div class="key-item" data-keywords="select all ggVG">
+              <div class="key-chord">
+                <span class="key">gg</span>
+                <span class="key">V</span>
+                <span class="key">G</span>
+              </div>
+              <div class="key-desc">Select entire file</div>
+            </div>
+            <div class="key-item" data-keywords="indent >">
+              <div class="key-chord">
+                <span class="key">></span>
+              </div>
+              <div class="key-desc">Indent selection right</div>
+            </div>
+            <div class="key-item" data-keywords="unindent <">
+              <div class="key-chord">
+                <span class="key"><</span>
+              </div>
+              <div class="key-desc">Indent selection left</div>
+            </div>
+            <div class="key-item" data-keywords="yank selection y">
+              <div class="key-chord">
+                <span class="key">y</span>
+              </div>
+              <div class="key-desc">Yank (copy) selection</div>
+            </div>
+            <div class="key-item" data-keywords="delete selection d">
+              <div class="key-chord">
+                <span class="key">d</span>
+              </div>
+              <div class="key-desc">Delete selection</div>
+            </div>
+            <div class="key-item" data-keywords="change selection c">
+              <div class="key-chord">
+                <span class="key">c</span>
+              </div>
+              <div class="key-desc">Change selection (delete + insert)</div>
+            </div>
+            <div class="key-item" data-keywords="escape exit visual">
+              <div class="key-chord">
+                <span class="key">Esc</span>
+              </div>
+              <div class="key-desc">Exit visual mode</div>
+            </div>
+            <div class="key-item" data-keywords="o other end">
+              <div class="key-chord">
+                <span class="key">o</span>
+              </div>
+              <div class="key-desc">Move cursor to other end of selection</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- File Operations -->
+        <div class="section" data-categories="file">
+          <div class="section-header">
+            <div class="section-icon file">F</div>
+            <div class="section-title">File & Buffer</div>
+            <div class="section-subtitle">Save, quit, navigate</div>
+          </div>
+          <div class="key-list">
+            <div class="key-item" data-keywords="write save :w">
+              <div class="key-chord">
+                <span class="key">:</span>
+                <span class="key">w</span>
+              </div>
+              <div class="key-desc">Write (save) file</div>
+            </div>
+            <div class="key-item" data-keywords="quit :q">
+              <div class="key-chord">
+                <span class="key">:</span>
+                <span class="key">q</span>
+              </div>
+              <div class="key-desc">Quit vim</div>
+            </div>
+            <div class="key-item" data-keywords="write quit save exit :wq">
+              <div class="key-chord">
+                <span class="key">:</span>
+                <span class="key">wq</span>
+              </div>
+              <div class="key-desc">Save and quit</div>
+            </div>
+            <div class="key-item" data-keywords="force quit :q!">
+              <div class="key-chord">
+                <span class="key">:</span>
+                <span class="key">q!</span>
+              </div>
+              <div class="key-desc">Force quit without saving</div>
+            </div>
+            <div class="key-item" data-keywords="write quit ZZ">
+              <div class="key-chord">
+                <span class="key">Z</span>
+                <span class="key">Z</span>
+              </div>
+              <div class="key-desc">Save and quit (faster than :wq)</div>
+            </div>
+            <div class="key-item" data-keywords="force write :w!">
+              <div class="key-chord">
+                <span class="key">:</span>
+                <span class="key">w!</span>
+              </div>
+              <div class="key-desc">Force write (override read-only)</div>
+            </div>
+            <div class="key-item" data-keywords="edit file :e">
+              <div class="key-chord">
+                <span class="key">:</span>
+                <span class="key">e</span>
+              </div>
+              <div class="key-desc">Edit/open file</div>
+            </div>
+            <div class="key-item" data-keywords="next buffer :bn">
+              <div class="key-chord">
+                <span class="key">:</span>
+                <span class="key">bn</span>
+              </div>
+              <div class="key-desc">Next buffer</div>
+            </div>
+            <div class="key-item" data-keywords="previous buffer :bp">
+              <div class="key-chord">
+                <span class="key">:</span>
+                <span class="key">bp</span>
+              </div>
+              <div class="key-desc">Previous buffer</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search -->
+        <div class="section" data-categories="motion">
+          <div class="section-header">
+            <div class="section-icon search">/</div>
+            <div class="section-title">Search & Replace</div>
+            <div class="section-subtitle">Find anything</div>
+          </div>
+          <div class="key-list">
+            <div class="key-item" data-keywords="search forward /">
+              <div class="key-chord">
+                <span class="key">/</span>
+              </div>
+              <div class="key-desc">Search forward for pattern</div>
+            </div>
+            <div class="key-item" data-keywords="search backward ?">
+              <div class="key-chord">
+                <span class="key">?</span>
+              </div>
+              <div class="key-desc">Search backward for pattern</div>
+            </div>
+            <div class="key-item" data-keywords="next result n">
+              <div class="key-chord">
+                <span class="key">n</span>
+              </div>
+              <div class="key-desc">Next search result</div>
+            </div>
+            <div class="key-item" data-keywords="previous result N">
+              <div class="key-chord">
+                <span class="key">N</span>
+              </div>
+              <div class="key-desc">Previous search result</div>
+            </div>
+            <div class="key-item" data-keywords="search word under cursor *">
+              <div class="key-chord">
+                <span class="key">*</span>
+              </div>
+              <div class="key-desc">Search word under cursor forward</div>
+            </div>
+            <div class="key-item" data-keywords="search word backward #">
+              <div class="key-chord">
+                <span class="key">#</span>
+              </div>
+              <div class="key-desc">Search word under cursor backward</div>
+            </div>
+            <div class="key-item" data-keywords="replace :%s">
+              <div class="key-chord">
+                <span class="key">:</span>
+                <span class="key">%s/old/new/g</span>
+              </div>
+              <div class="key-desc">Replace all occurrences in file</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="section" data-categories="danger">
+          <div class="section-header">
+            <div class="section-icon danger">!</div>
+            <div class="section-title">Danger Zone</div>
+            <div class="section-subtitle">Use with caution</div>
+          </div>
+          <div class="key-list">
+            <div class="key-item" data-keywords="delete all ggVGd">
+              <div class="key-chord">
+                <span class="key">gg</span>
+                <span class="key">V</span>
+                <span class="key">G</span>
+                <span class="key">d</span>
+              </div>
+              <div class="key-desc">Delete entire file content</div>
+            </div>
+            <div class="key-item" data-keywords="force quit discard :q!">
+              <div class="key-chord">
+                <span class="key">:</span>
+                <span class="key">q!</span>
+              </div>
+              <div class="key-desc">Quit without saving (ALL changes lost)</div>
+            </div>
+            <div class="key-item" data-keywords="delete to end D">
+              <div class="key-chord">
+                <span class="key">D</span>
+              </div>
+              <div class="key-desc">Delete from cursor to end of line</div>
+            </div>
+            <div class="key-item" data-keywords="join lines J">
+              <div class="key-chord">
+                <span class="key">J</span>
+              </div>
+              <div class="key-desc">Join current and next line</div>
+            </div>
+            <div class="key-item" data-keywords="suspend ctrl-z">
+              <div class="key-chord">
+                <span class="key">Ctrl</span>
+                <span class="key">+</span>
+                <span class="key">z</span>
+              </div>
+              <div class="key-desc">Suspend vim (fg to return)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="practice-zone">
+        <div class="practice-header">
+          <div
+            class="section-icon motion"
+            style="width: 40px; height: 40px; font-size: 1.2rem"
+          >
+            ⌨
+          </div>
+          <div>
+            <h2
+              style="
+                font-family: &quot;JetBrains Mono&quot;, monospace;
+                margin-bottom: 0.25rem;
+              "
+            >
+              Practice Zone
+            </h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem">
+              Try pressing the keys you learned above!
+            </p>
+          </div>
+        </div>
+        <div class="practice-area" id="practiceArea" tabindex="0">
+          <div class="practice-text" id="practiceText">
+            The quick brown fox jumps over the lazy dog.<br />
+            Programming is the art of telling another human what one wants the
+            computer to do.<br />
+            Vim is a highly configurable text editor built to enable efficient
+            text editing.<br />
+            <span style="color: var(--text-secondary)"
+              >-- Press any normal mode key to see its effect --</span
+            >
+          </div>
+        </div>
+        <div class="status-bar">
+          <span class="status-mode normal" id="statusMode">NORMAL</span>
+          <span id="position">Line 1, Col 1</span>
+          <span class="command-preview" id="commandPreview">Ready</span>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-number" id="motionCount">14</div>
+          <div class="stat-label">Motion Commands</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="editCount">21</div>
+          <div class="stat-label">Editing Commands</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="visualCount">14</div>
+          <div class="stat-label">Visual Mode Keys</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">∞</div>
+          <div class="stat-label">Productivity Gain</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Search functionality
+      const searchInput = document.getElementById("searchInput");
+      const sections = document.querySelectorAll(".section");
+      const keyItems = document.querySelectorAll(".key-item");
+
+      searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase();
+
+        keyItems.forEach((item) => {
+          const keywords = item.getAttribute("data-keywords") || "";
+          const text = item.textContent.toLowerCase();
+
+          if (keywords.includes(query) || text.includes(query)) {
+            item.classList.remove("hidden");
+            item.style.display = "flex";
+          } else {
+            item.classList.add("hidden");
+            item.style.display = "none";
+          }
+        });
+
+        // Hide empty sections
+        sections.forEach((section) => {
+          const visibleItems = section.querySelectorAll(
+            ".key-item:not(.hidden)",
+          );
+          if (visibleItems.length === 0) {
+            section.style.display = "none";
+          } else {
+            section.style.display = "block";
+          }
+        });
+      });
+
+      // Category filtering
+      const tags = document.querySelectorAll(".tag");
+      tags.forEach((tag) => {
+        tag.addEventListener("click", () => {
+          const filter = tag.getAttribute("data-filter");
+          const category = tag.getAttribute("data-category");
+
+          // Update active state
+          tags.forEach((t) => t.classList.remove("active"));
+          tag.classList.add("active");
+
+          if (filter === "all") {
+            sections.forEach((s) => (s.style.display = "block"));
+            keyItems.forEach((i) => {
+              i.classList.remove("hidden");
+              i.style.display = "flex";
+            });
+          } else {
+            sections.forEach((section) => {
+              const categories = section.getAttribute("data-categories") || "";
+              if (categories.includes(category)) {
+                section.style.display = "block";
+                section.querySelectorAll(".key-item").forEach((i) => {
+                  i.classList.remove("hidden");
+                  i.style.display = "flex";
+                });
+              } else {
+                section.style.display = "none";
+              }
+            });
+          }
+        });
+      });
+
+      // Practice zone simulation
+      const practiceArea = document.getElementById("practiceArea");
+      const practiceText = document.getElementById("practiceText");
+      const statusMode = document.getElementById("statusMode");
+      const commandPreview = document.getElementById("commandPreview");
+      const position = document.getElementById("position");
+
+      let currentMode = "normal";
+      let commandBuffer = "";
+      let cursorPos = { line: 0, col: 0 };
+
+      const originalText = practiceText.innerHTML;
+
+      practiceArea.addEventListener("keydown", (e) => {
+        e.preventDefault();
+        const key = e.key;
+
+        if (currentMode === "normal") {
+          if (key === "i") {
+            currentMode = "insert";
+            statusMode.textContent = "INSERT";
+            statusMode.className = "status-mode";
+            statusMode.style.background = "var(--accent-edit)";
+            statusMode.style.color = "var(--bg-primary)";
+            commandPreview.textContent = "Insert mode - type text, Esc to exit";
+          } else if (key === "v") {
+            currentMode = "visual";
+            statusMode.textContent = "VISUAL";
+            statusMode.className = "status-mode visual";
+            commandPreview.textContent =
+              "Visual mode - move to select, y/d/c to act";
+          } else if (key === "Escape") {
+            commandBuffer = "";
+            commandPreview.textContent = "Ready";
+          } else if (key === "h" || key === "j" || key === "k" || key === "l") {
+            commandPreview.textContent = `Moving ${key === "h" ? "left" : key === "j" ? "down" : key === "k" ? "up" : "right"}`;
+            updatePosition(key);
+          } else if (key === "w") {
+            commandPreview.textContent = "Jump to next word";
+          } else if (key === "b") {
+            commandPreview.textContent = "Jump to previous word";
+          } else if (key === "0") {
+            commandPreview.textContent = "Start of line";
+          } else if (key === "$") {
+            commandPreview.textContent = "End of line";
+          } else if (key === "d") {
+            commandBuffer = "d";
+            commandPreview.textContent = "d - waiting for motion (d$ dd dw)";
+          } else if (key === "y") {
+            commandBuffer = "y";
+            commandPreview.textContent = "y - waiting for motion (yy yw)";
+          } else if (key === "c") {
+            commandBuffer = "c";
+            commandPreview.textContent = "c - waiting for motion (cw c$)";
+          } else if (key === "p") {
+            commandPreview.textContent = "Paste after cursor";
+          } else if (key === "u") {
+            commandPreview.textContent = "Undo last change";
+          } else if (key === "r") {
+            commandPreview.textContent =
+              "Replace single character - type next char";
+          } else if (key === "x") {
+            commandPreview.textContent = "Delete character under cursor";
+          } else if (key === "o") {
+            commandPreview.textContent = "Open new line below, enter insert";
+          } else if (key === "a") {
+            commandPreview.textContent = "Append - enter insert after cursor";
+          } else if (key === "g" && commandBuffer === "") {
+            commandBuffer = "g";
+            commandPreview.textContent = "g - waiting (gg for top)";
+          } else if (key === "g" && commandBuffer === "g") {
+            commandBuffer = "";
+            commandPreview.textContent = "Go to top of file";
+          } else if (key === "G") {
+            commandBuffer = "";
+            commandPreview.textContent = "Go to bottom of file";
+          } else if (key === ".") {
+            commandPreview.textContent = "Repeat last change";
+          } else {
+            commandPreview.textContent =
+              key.length === 1 ? `Key: ${key}` : `Special: ${key}`;
+          }
+        } else if (currentMode === "insert") {
+          if (key === "Escape") {
+            currentMode = "normal";
+            statusMode.textContent = "NORMAL";
+            statusMode.className = "status-mode normal";
+            commandPreview.textContent = "Back to normal mode";
+          } else {
+            commandPreview.textContent = `Inserting: ${key}`;
+          }
+        } else if (currentMode === "visual") {
+          if (key === "Escape") {
+            currentMode = "normal";
+            statusMode.textContent = "NORMAL";
+            statusMode.className = "status-mode normal";
+            commandPreview.textContent = "Back to normal mode";
+          } else if (key === "y") {
+            commandPreview.textContent = "Yank (copy) selection";
+          } else if (key === "d") {
+            commandPreview.textContent = "Delete selection";
+          } else if (key === "c") {
+            commandPreview.textContent = "Change selection";
+          } else if (key === ">" || key === "<") {
+            commandPreview.textContent = `Indent ${key === ">" ? "right" : "left"}`;
+          } else {
+            commandPreview.textContent = `Visual + ${key}`;
+          }
+        }
+
+        // Reset buffer on timeout
+        clearTimeout(window.bufferTimeout);
+        window.bufferTimeout = setTimeout(() => {
+          if (commandBuffer && !["d", "y", "c", "g"].includes(key)) {
+            commandBuffer = "";
+          }
+        }, 2000);
+      });
+
+      function updatePosition(direction) {
+        if (direction === "j") cursorPos.line = Math.min(cursorPos.line + 1, 2);
+        if (direction === "k") cursorPos.line = Math.max(cursorPos.line - 1, 0);
+        position.textContent = `Line ${cursorPos.line + 1}, Col ${cursorPos.col + 1}`;
+      }
+
+      // Add click-to-copy functionality
+      keyItems.forEach((item) => {
+        item.addEventListener("click", () => {
+          const keys = item
+            .querySelector(".key-chord")
+            .textContent.replace(/\s+/g, " ")
+            .trim();
+          navigator.clipboard.writeText(keys).then(() => {
+            const original = item.style.background;
+            item.style.background = "rgba(126, 231, 135, 0.2)";
+            setTimeout(() => {
+              item.style.background = original;
+            }, 300);
+          });
+        });
+      });
+
+      // Focus practice area on load
+      practiceArea.focus();
+    </script>
+  </body>
+</html>
